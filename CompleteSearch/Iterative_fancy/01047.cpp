@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <bitset>
+#include <cmath>
 
 using namespace std;
 
@@ -14,21 +16,8 @@ typedef vector<pll> vll;
 
 int n, built;
 
-void increment(vector<int>& v,int index)
-{
-    v[index]++;
-    if(v[index] > n - 1)
-    {
-        if(index == 0)
-        {
-            return;
-        }
-        increment(v, index - 1);
-        v[index] = v[index-1] + 1;
-    }
-}
 struct OverlapClass{
-    vector<int> v;
+    long towerOver;
     int num;
 };
 
@@ -46,71 +35,68 @@ int main(void)
         }
         int m;
         cin >> m;
-        vector<vector<OverlapClass> > overlap(n);
+        vector<OverlapClass> overlap;
         for(int i = 0; i < m; ++i)
         {
             int towers;
             cin >> towers;
-            vector<int> towerOver;
+            long towerOver = 0;
             for(int j = 0; j < towers; ++j)
             {
                 int curTower;
                 cin >> curTower;
-                towerOver.push_back(curTower-1);
+                towerOver |= (1 << (curTower-1)); 
             }
-            OverlapClass oc;
-            oc.v.assign(towerOver.begin(), towerOver.end());
             int overlapNum;
             cin >> overlapNum;
+            OverlapClass oc;
+            oc.towerOver = towerOver;
             oc.num = overlapNum;
-            for(int j = 0; j < towers; ++j)
-            {
-                overlap[towerOver[j]].push_back(oc);
-            }
+            overlap.push_back(oc);
+
+                
         }
-        vector<int> towersChosen(built);
-        for(int i = 0; i < built; ++i)
-        {
-            towersChosen[i] = i;
-        }
-        vector<int> locations;
+        unsigned long locations;
         int value = 0;
-
-        while(1)
+        long comp = 1 << n;
+        long v = ( 1 << built)-1;
+        while(v < (comp))
         {
-
             int people = 0;
-            for(size_t i = 0; i < towersChosen.size(); ++i)
+            for(size_t i = 0; i < (size_t)n; ++i)
             {
-                people += towersServiced[towersChosen[i]];
-                for(OverlapClass oc : overlap[towersChosen[i]])
+                people += ((long)(1<<i))&v? towersServiced[i]  : 0;
+            }
+
+            for(size_t i = 0; i < overlap.size(); ++i)
+            {
+                OverlapClass oc = overlap[i];
+                long numOverlapped = oc.towerOver & v;
+                if(numOverlapped > 1)
                 {
-                    for(size_t j = 0; j < i; ++j)
-                    {
-                       if(find(oc.v.begin(), oc.v.end(), towersChosen[j]) != oc.v.end() && find(oc.v.begin(), oc.v.end(), towersChosen[i]) != oc.v.end())
-                       {
-                           people -= oc.num; 
-                           break;
-                       }
-                    }
+                    bitset<32> x = numOverlapped; 
+                    people -= ((x.count()-1))* oc.num;
                 }
             }
             if(people > value)
             {
                 value = people;
-                locations.assign(towersChosen.begin(), towersChosen.end());
+                locations = v;
             }
-            increment(towersChosen, built - 1);
-            if(towersChosen[0] >= n - built) break;
+            unsigned long t = (v| (v - 1)) + 1;
+            v = t | ((((t & -t) / (v & -v)) >> 1) - 1);
         }
-        printf("Case Number %d\n",caseNum++);
+        printf("Case Number  %d\n",caseNum++);
         printf("Number of Customers: %d\n", value);
         printf("Locations recommended: ");
         int first = 0;
-        for(int l : locations)
+        for(int i = 0; i < n; ++i)
         {
-            if(first++) cout  << " ";
-            cout << l + 1;
+            if( (1<<i)&locations)
+            {
+                if(first++) cout  << " ";
+                cout << i + 1;
+            }
         }
         cout << endl;
         cout << endl;
