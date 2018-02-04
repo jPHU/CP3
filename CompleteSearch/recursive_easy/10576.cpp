@@ -16,7 +16,7 @@ int s, d;
 int best = 0;
 vector<int> bestNumbers;
 
-void find_best(vector<int> values, int currentSurplus, int index, int totalSurplus)
+void find_best(vector<int>& values, int currentSurplus, int index, int totalSurplus)
 {
     if(index == 12)
     {
